@@ -1,0 +1,16 @@
+{
+  "name": "Articulate Speech",
+  "short_name": "Articulate",
+  "description": "Know exactly why you sound unsure. Fix it in 60 seconds.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050809",
+  "theme_color": "#050809",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
