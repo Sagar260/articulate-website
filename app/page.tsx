@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -11,10 +11,13 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [hasScrolled, setHasScrolled] = useState(false)
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null)
+  const [mounted, setMounted] = useState(false)
+  const [activeSection, setActiveSection] = useState('')
 
   // Waitlist config
   const TOTAL_FOUNDER_SPOTS = 500
   const [currentSignups] = useState(347)
+  const [animatedCount, setAnimatedCount] = useState(0)
   const spotsRemaining = TOTAL_FOUNDER_SPOTS - currentSignups
   const percentageFilled = (currentSignups / TOTAL_FOUNDER_SPOTS) * 100
 
@@ -22,9 +25,44 @@ export default function Home() {
   const [recentSignup, setRecentSignup] = useState<string | null>(null)
   const recentNames = ['Sarah K.', 'Mike T.', 'Priya R.', 'James L.', 'Emma W.']
 
-  // Scroll handler
+  // Mount animation
   useEffect(() => {
-    const handleScroll = () => setHasScrolled(window.scrollY > 20)
+    setMounted(true)
+    // Animate counter
+    const duration = 1500
+    const steps = 30
+    const increment = currentSignups / steps
+    let current = 0
+    const timer = setInterval(() => {
+      current += increment
+      if (current >= currentSignups) {
+        setAnimatedCount(currentSignups)
+        clearInterval(timer)
+      } else {
+        setAnimatedCount(Math.floor(current))
+      }
+    }, duration / steps)
+    return () => clearInterval(timer)
+  }, [currentSignups])
+
+  // Scroll handler with section detection
+  useEffect(() => {
+    const handleScroll = () => {
+      setHasScrolled(window.scrollY > 20)
+
+      // Detect active section for nav highlight
+      const sections = ['how-it-works', 'receipt-section', 'agents-section', 'faq-section']
+      for (const id of sections) {
+        const el = document.getElementById(id)
+        if (el) {
+          const rect = el.getBoundingClientRect()
+          if (rect.top <= 150 && rect.bottom >= 150) {
+            setActiveSection(id)
+            break
+          }
+        }
+      }
+    }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -39,16 +77,16 @@ export default function Home() {
     return () => { document.body.style.overflow = '' }
   }, [mobileMenuOpen])
 
-  // Recent signup notifications (less frequent on mobile)
+  // Recent signup notifications
   useEffect(() => {
     const showNotification = () => {
       const name = recentNames[Math.floor(Math.random() * recentNames.length)]
       const mins = Math.floor(Math.random() * 5) + 1
       setRecentSignup(`${name} joined ${mins}m ago`)
-      setTimeout(() => setRecentSignup(null), 3000)
+      setTimeout(() => setRecentSignup(null), 3500)
     }
-    const timeout = setTimeout(showNotification, 10000)
-    const interval = setInterval(showNotification, 30000)
+    const timeout = setTimeout(showNotification, 8000)
+    const interval = setInterval(showNotification, 25000)
     return () => { clearTimeout(timeout); clearInterval(interval) }
   }, [])
 
@@ -97,49 +135,72 @@ export default function Home() {
     }
   ]
 
+  // Nav items for reuse
+  const navItems = [
+    { label: 'How It Works', id: 'how-it-works' },
+    { label: 'Features', id: 'receipt-section' },
+    { label: 'AI Agents', id: 'agents-section' },
+    { label: 'FAQ', id: 'faq-section' },
+  ]
+
   return (
     <main className="min-h-screen bg-bg-0 overflow-x-hidden">
       {/* ===== RECENT SIGNUP TOAST ===== */}
-      {recentSignup && (
-        <div className="fixed bottom-4 left-4 right-4 md:left-6 md:right-auto z-[60] animate-slide-up">
-          <div className="flex items-center gap-3 px-4 py-3 bg-bg-2/95 backdrop-blur-sm border border-white/10 rounded-xl shadow-lg">
-            <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <span className="text-sm text-text-2">{recentSignup}</span>
+      <div
+        className={`fixed bottom-4 left-4 right-4 md:left-6 md:right-auto z-[60] transition-all duration-500 ${
+          recentSignup ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="flex items-center gap-3 px-4 py-3.5 bg-bg-2/95 backdrop-blur-xl border border-success/20 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+          <div className="w-9 h-9 rounded-full bg-success/20 flex items-center justify-center flex-shrink-0 animate-pulse">
+            <svg className="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
           </div>
+          <span className="text-sm font-medium text-text-1">{recentSignup}</span>
         </div>
-      )}
+      </div>
 
       {/* ===== MOBILE MENU DRAWER ===== */}
       <div
-        className={`fixed inset-0 z-[100] transition-all duration-300 md:hidden ${
-          mobileMenuOpen ? 'visible' : 'invisible'
+        className={`fixed inset-0 z-[100] transition-all duration-500 md:hidden ${
+          mobileMenuOpen ? 'visible' : 'invisible pointer-events-none'
         }`}
       >
-        {/* Backdrop */}
+        {/* Backdrop with blur */}
         <div
-          className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
+          className={`absolute inset-0 bg-black/70 backdrop-blur-md transition-opacity duration-400 ${
             mobileMenuOpen ? 'opacity-100' : 'opacity-0'
           }`}
           onClick={() => setMobileMenuOpen(false)}
         />
 
-        {/* Drawer */}
+        {/* Drawer - Full screen on mobile for better UX */}
         <nav
-          className={`absolute top-0 right-0 bottom-0 w-[280px] max-w-[80vw] bg-bg-1 border-l border-white/10 flex flex-col transition-transform duration-300 ease-out ${
-            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          className={`absolute inset-0 bg-gradient-to-b from-bg-1 to-bg-0 flex flex-col transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+            mobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
           }`}
           style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
           {/* Drawer Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-            <span className="text-lg font-semibold text-text-1">Menu</span>
+          <div className="flex items-center justify-between px-6 py-5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8">
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                  <defs>
+                    <linearGradient id="mobileLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#A78BFA" />
+                      <stop offset="100%" stopColor="#8B5CF6" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M50 10 L80 85 L65 85 L58 65 L42 65 L35 85 L20 85 Z M50 35 L45 50 L55 50 Z" fill="url(#mobileLogoGrad)" />
+                </svg>
+              </div>
+              <span className="text-xl font-semibold text-text-1">Articulate</span>
+            </div>
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="w-11 h-11 flex items-center justify-center rounded-xl bg-bg-2 text-text-2 hover:text-text-1 transition-colors"
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 text-text-1 active:scale-95 transition-transform"
               aria-label="Close menu"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,45 +209,65 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Drawer Links */}
-          <div className="flex-1 px-5 py-6 space-y-2 overflow-y-auto">
-            {[
-              { label: 'How It Works', id: 'how-it-works' },
-              { label: 'Speech Receipt', id: 'receipt-section' },
-              { label: 'AI Agents', id: 'agents-section' },
-              { label: 'FAQ', id: 'faq-section' },
-            ].map((item) => (
+          {/* Drawer Links - Staggered animation */}
+          <div className="flex-1 px-6 py-8 space-y-3 overflow-y-auto">
+            {navItems.map((item, i) => (
               <button
                 key={item.id}
                 onClick={() => scrollTo(item.id)}
-                className="w-full text-left px-4 py-3.5 text-base text-text-2 hover:text-text-1 hover:bg-bg-2 rounded-xl transition-colors"
+                style={{
+                  transitionDelay: mobileMenuOpen ? `${(i + 1) * 75}ms` : '0ms',
+                }}
+                className={`w-full flex items-center justify-between px-5 py-4 text-lg font-medium rounded-2xl transition-all duration-300 active:scale-[0.98] ${
+                  mobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
+                } ${activeSection === item.id ? 'bg-accent/20 text-accent' : 'text-text-1 bg-white/5 active:bg-white/10'}`}
               >
                 {item.label}
+                <svg className="w-5 h-5 text-text-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             ))}
           </div>
 
-          {/* Drawer CTA */}
-          <div className="px-5 pb-6" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+          {/* Drawer Footer with CTA */}
+          <div
+            className={`px-6 pt-4 pb-6 border-t border-white/10 transition-all duration-500 ${
+              mobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+            }`}
+            style={{
+              paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)',
+              transitionDelay: mobileMenuOpen ? '350ms' : '0ms',
+            }}
+          >
+            {/* Spots remaining indicator */}
+            <div className="flex items-center justify-center gap-2 mb-4 text-sm text-warning">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-warning"></span>
+              </span>
+              Only {spotsRemaining} founder spots left
+            </div>
             <button
               onClick={() => scrollTo('waitlist')}
-              className="w-full h-14 flex items-center justify-center gap-2 bg-accent hover:bg-accent-dark text-white font-semibold rounded-xl transition-colors"
+              className="w-full h-14 flex items-center justify-center gap-2 bg-gradient-to-r from-accent to-purple-500 text-white font-semibold rounded-2xl shadow-[0_0_30px_rgba(139,92,246,0.4)] active:scale-[0.98] transition-transform"
             >
-              Claim Your Spot
+              Claim Founder's Pricing
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </button>
+            <p className="text-center text-xs text-text-3 mt-3">3 months free + $10/mo forever</p>
           </div>
         </nav>
       </div>
 
       {/* ===== STICKY HEADER ===== */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
           hasScrolled
-            ? 'bg-bg-1/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.3)] border-b border-white/10'
-            : 'bg-transparent'
+            ? 'bg-bg-1/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.3)] border-white/10'
+            : 'bg-bg-0/50 backdrop-blur-sm border-white/5'
         }`}
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
@@ -213,16 +294,15 @@ export default function Home() {
 
           {/* Desktop Nav Links - Centered pill container */}
           <div className="hidden lg:flex items-center gap-1 px-2 py-1.5 bg-white/5 border border-white/10 rounded-full">
-            {[
-              { label: 'How It Works', id: 'how-it-works' },
-              { label: 'Features', id: 'receipt-section' },
-              { label: 'AI Agents', id: 'agents-section' },
-              { label: 'FAQ', id: 'faq-section' },
-            ].map((item) => (
+            {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => scrollTo(item.id)}
-                className="px-4 py-2 text-sm font-medium text-text-2 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200"
+                className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 ${
+                  activeSection === item.id
+                    ? 'text-white bg-white/10'
+                    : 'text-text-2 hover:text-white hover:bg-white/10'
+                }`}
               >
                 {item.label}
               </button>
@@ -262,8 +342,12 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             {/* Copy Column */}
             <div className="space-y-6 md:space-y-7">
-              {/* Urgency Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-warning/10 border border-warning/20 rounded-full">
+              {/* Urgency Badge - Animated entrance */}
+              <div
+                className={`inline-flex items-center gap-2 px-3 py-1.5 bg-warning/10 border border-warning/20 rounded-full transition-all duration-700 ${
+                  mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+                }`}
+              >
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-warning"></span>
@@ -271,24 +355,50 @@ export default function Home() {
                 <span className="text-xs font-medium text-warning">{spotsRemaining} founder spots left</span>
               </div>
 
-              {/* H1 - Fluid Typography */}
+              {/* H1 - Fluid Typography with staggered animation */}
               <h1
                 id="hero-heading"
                 className="font-semibold tracking-tight leading-[1.08]"
                 style={{ fontSize: 'clamp(2rem, 7vw, 3.75rem)' }}
               >
-                <span className="block text-text-1">Know exactly why you</span>
-                <span className="block text-text-1">sound unsure.</span>
-                <span className="block text-gradient mt-1">Fix it in 60 seconds.</span>
+                <span
+                  className={`block text-text-1 transition-all duration-700 delay-100 ${
+                    mounted ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
+                  }`}
+                >
+                  Know exactly why you
+                </span>
+                <span
+                  className={`block text-text-1 transition-all duration-700 delay-200 ${
+                    mounted ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
+                  }`}
+                >
+                  sound unsure.
+                </span>
+                <span
+                  className={`block text-gradient mt-1 transition-all duration-700 delay-300 ${
+                    mounted ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
+                  }`}
+                >
+                  Fix it in 60 seconds.
+                </span>
               </h1>
 
               {/* Subheadline */}
-              <p className="text-mobile-body md:text-lg text-text-2 leading-relaxed max-w-lg">
+              <p
+                className={`text-mobile-body md:text-lg text-text-2 leading-relaxed max-w-lg transition-all duration-700 delay-[400ms] ${
+                  mounted ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
+                }`}
+              >
                 Record a 60-second answer. Get your Speech Receipt — clarity score, filler words, pace, and your #1 fix. Redo it. Compare. Walk in confident.
               </p>
 
               {/* Founder's Benefits */}
-              <div className="p-4 md:p-5 bg-bg-2/50 rounded-xl border border-accent/20">
+              <div
+                className={`p-4 md:p-5 bg-bg-2/50 rounded-2xl border border-accent/20 transition-all duration-700 delay-500 ${
+                  mounted ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
+                }`}
+              >
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg" aria-hidden="true">🌟</span>
                   <span className="text-sm font-semibold text-accent uppercase tracking-wider">Founder's Access</span>
@@ -313,7 +423,12 @@ export default function Home() {
               </div>
 
               {/* Waitlist Form */}
-              <form onSubmit={handleSubmit} className="space-y-3">
+              <form
+                onSubmit={handleSubmit}
+                className={`space-y-3 transition-all duration-700 delay-[600ms] ${
+                  mounted ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
+                }`}
+              >
                 <label htmlFor="hero-email" className="sr-only">Email address</label>
                 <input
                   id="hero-email"
@@ -324,12 +439,12 @@ export default function Home() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="w-full h-[52px] px-4 bg-bg-2 border border-white/10 rounded-xl text-base text-text-1 placeholder:text-text-3 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
+                  className="w-full h-14 px-5 bg-bg-2 border border-white/10 rounded-2xl text-base text-text-1 placeholder:text-text-3 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
                 />
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-[52px] flex items-center justify-center gap-2 bg-gradient-to-b from-accent to-accent-dark hover:from-accent-dark hover:to-accent-dark text-white font-semibold rounded-xl shadow-btn-primary hover:shadow-btn-primary-hover transition-all duration-200 disabled:opacity-50"
+                  className="w-full h-14 flex items-center justify-center gap-2 bg-gradient-to-r from-accent via-purple-500 to-accent text-white font-semibold rounded-2xl shadow-[0_0_30px_rgba(139,92,246,0.4)] hover:shadow-[0_0_40px_rgba(139,92,246,0.6)] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:active:scale-100"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
@@ -340,27 +455,36 @@ export default function Home() {
                       Claiming...
                     </span>
                   ) : (
-                    "Claim Founder's Pricing"
+                    <>
+                      Claim Founder's Pricing
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </>
                   )}
                 </button>
 
                 {/* Progress */}
                 <div className="space-y-1.5 pt-1">
-                  <div className="h-1.5 bg-bg-3 rounded-full overflow-hidden">
+                  <div className="h-2 bg-bg-3 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-accent to-warning rounded-full transition-all duration-500"
-                      style={{ width: `${percentageFilled}%` }}
+                      className="h-full bg-gradient-to-r from-accent to-warning rounded-full transition-all duration-1000 ease-out"
+                      style={{ width: mounted ? `${percentageFilled}%` : '0%' }}
                     />
                   </div>
                   <div className="flex justify-between text-xs text-text-2">
-                    <span>{currentSignups} founders joined</span>
+                    <span><span className="font-semibold text-text-1">{animatedCount}</span> founders joined</span>
                     <span className="text-warning font-medium">{spotsRemaining} spots left</span>
                   </div>
                 </div>
               </form>
 
               {/* Trust Signals */}
-              <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-text-2">
+              <div
+                className={`flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-text-2 transition-all duration-700 delay-700 ${
+                  mounted ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
+                }`}
+              >
                 {['No credit card', 'Cancel anytime', 'Summer 2025'].map((t, i) => (
                   <span key={i} className="flex items-center gap-1.5">
                     <svg className="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -373,8 +497,12 @@ export default function Home() {
             </div>
 
             {/* Speech Receipt Mockup */}
-            <div className="relative mt-4 lg:mt-0">
-              <div className="absolute -inset-8 bg-accent/10 blur-[60px] rounded-full pointer-events-none" aria-hidden="true" />
+            <div
+              className={`relative mt-4 lg:mt-0 transition-all duration-1000 delay-500 ${
+                mounted ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-8 opacity-0 scale-95'
+              }`}
+            >
+              <div className="absolute -inset-8 bg-accent/15 blur-[80px] rounded-full pointer-events-none animate-pulse" aria-hidden="true" />
               <div className="relative bg-bg-2 rounded-2xl border border-white/10 shadow-elevation-3 overflow-hidden max-w-md mx-auto lg:max-w-none">
                 <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
                   <span className="font-mono text-sm font-semibold text-text-1 tracking-wide">SPEECH RECEIPT</span>
