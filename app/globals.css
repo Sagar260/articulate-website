@@ -321,3 +321,53 @@ section[id],
     transform: translateZ(0);
   }
 }
+
+/* === MOBILE TYPOGRAPHY UTILITIES === */
+@layer utilities {
+  /* Mobile-first fluid typography */
+  .text-mobile-body {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .text-mobile-h2 {
+    font-size: clamp(1.5rem, 5vw, 2.25rem);
+    line-height: 1.2;
+  }
+
+  /* Mobile section padding (20-24px on mobile) */
+  .mobile-section-padding {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .mobile-section-padding {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mobile-section-padding {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+}
+
+/* === MOBILE DRAWER ANIMATION === */
+@keyframes drawer-slide-in {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes drawer-slide-out {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes backdrop-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}

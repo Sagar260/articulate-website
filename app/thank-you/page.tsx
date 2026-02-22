@@ -15,7 +15,7 @@ function ThankYouContent() {
     // Generate a unique referral link based on email hash
     // In production, this should come from your backend
     const hash = btoa(email).slice(0, 8)
-    setReferralLink(`https://articulatespeech.ai/r/${hash}`)
+    setReferralLink(`https://articulatespeech.io/r/${hash}`)
   }, [email])
 
   const copyToClipboard = () => {
