@@ -188,7 +188,7 @@ export default function Home() {
         }`}
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
-        <nav className="h-[60px] flex items-center justify-between px-5 md:px-6 max-w-7xl mx-auto">
+        <nav className="h-[64px] flex items-center justify-between px-5 md:px-6 max-w-7xl mx-auto">
           {/* Logo */}
           <button
             onClick={scrollToTop}
@@ -208,6 +208,24 @@ export default function Home() {
             </div>
             <span className="text-lg font-semibold text-text-1 tracking-tight">Articulate</span>
           </button>
+
+          {/* Desktop Nav Links */}
+          <div className="hidden md:flex items-center gap-1">
+            {[
+              { label: 'How It Works', id: 'how-it-works' },
+              { label: 'Features', id: 'receipt-section' },
+              { label: 'AI Agents', id: 'agents-section' },
+              { label: 'FAQ', id: 'faq-section' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollTo(item.id)}
+                className="px-4 py-2 text-sm text-text-2 hover:text-text-1 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
 
           {/* Desktop CTA */}
           <button
