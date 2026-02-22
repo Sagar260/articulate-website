@@ -183,19 +183,21 @@ export default function Home() {
 
       {/* ===== STICKY HEADER ===== */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
-          hasScrolled ? 'bg-bg-0/95 backdrop-blur-xl shadow-lg' : 'bg-bg-0/80 backdrop-blur-md'
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          hasScrolled
+            ? 'bg-bg-1/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.3)] border-b border-white/10'
+            : 'bg-transparent'
         }`}
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
-        <nav className="h-[64px] flex items-center justify-between px-5 md:px-6 max-w-7xl mx-auto">
+        <nav className="h-[72px] flex items-center justify-between px-5 md:px-8 max-w-7xl mx-auto">
           {/* Logo */}
           <button
             onClick={scrollToTop}
             className="flex items-center gap-2.5 -ml-1 p-1 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             aria-label="Articulate - Go to top"
           >
-            <div className="w-8 h-8 flex-shrink-0">
+            <div className="w-9 h-9 flex-shrink-0">
               <svg viewBox="0 0 100 100" className="w-full h-full" aria-hidden="true">
                 <defs>
                   <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -206,11 +208,11 @@ export default function Home() {
                 <path d="M50 10 L80 85 L65 85 L58 65 L42 65 L35 85 L20 85 Z M50 35 L45 50 L55 50 Z" fill="url(#logoGrad)" />
               </svg>
             </div>
-            <span className="text-lg font-semibold text-text-1 tracking-tight">Articulate</span>
+            <span className="text-xl font-semibold text-text-1 tracking-tight">Articulate</span>
           </button>
 
-          {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-1">
+          {/* Desktop Nav Links - Centered pill container */}
+          <div className="hidden lg:flex items-center gap-1 px-2 py-1.5 bg-white/5 border border-white/10 rounded-full">
             {[
               { label: 'How It Works', id: 'how-it-works' },
               { label: 'Features', id: 'receipt-section' },
@@ -220,7 +222,7 @@ export default function Home() {
               <button
                 key={item.id}
                 onClick={() => scrollTo(item.id)}
-                className="px-4 py-2 text-sm text-text-2 hover:text-text-1 rounded-lg hover:bg-white/5 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-text-2 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200"
               >
                 {item.label}
               </button>
@@ -230,18 +232,21 @@ export default function Home() {
           {/* Desktop CTA */}
           <button
             onClick={() => scrollTo('waitlist')}
-            className="hidden md:flex px-5 py-2.5 text-sm font-medium bg-accent hover:bg-accent-dark text-white rounded-xl transition-colors"
+            className="hidden md:flex items-center gap-2 px-6 py-3 text-sm font-semibold bg-gradient-to-r from-accent to-purple-500 hover:from-purple-500 hover:to-accent text-white rounded-full shadow-[0_0_20px_rgba(139,92,246,0.4)] hover:shadow-[0_0_30px_rgba(139,92,246,0.6)] transition-all duration-300"
           >
             Claim Your Spot
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
           </button>
 
           {/* Mobile Hamburger */}
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="md:hidden w-11 h-11 flex items-center justify-center rounded-xl bg-bg-2/80 text-text-1 hover:bg-bg-3 transition-colors"
+            className="md:hidden w-11 h-11 flex items-center justify-center rounded-full bg-white/10 border border-white/10 text-text-1 hover:bg-white/15 transition-colors"
             aria-label="Open menu"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
@@ -250,7 +255,7 @@ export default function Home() {
 
       {/* ===== HERO SECTION ===== */}
       <section
-        className="mobile-section-padding pt-[100px] md:pt-[140px] pb-12 md:pb-20"
+        className="mobile-section-padding pt-[100px] md:pt-[120px] pb-12 md:pb-20"
         aria-labelledby="hero-heading"
       >
         <div className="max-w-7xl mx-auto">
